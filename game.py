@@ -30,6 +30,7 @@ class Game:
         self.lives = 3
         self.running = True
         self.paused = False
+        self.show_help = False
         self.level = 1
         self.highscore = 0
         self.save_file = os.path.join(os.path.dirname(__file__), 'save.json')
@@ -142,6 +143,12 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F1:
+                    # toggle help
+                    self.show_help = not self.show_help
+                if event.key == pygame.K_ESCAPE and self.show_help:
+                    # close help with ESC
+                    self.show_help = False
                 if event.key == pygame.K_SPACE:
                     self.ball.launch()
                 if event.key == pygame.K_r:
@@ -279,12 +286,55 @@ class Game:
         lives_surf = font.render(f"Lives: {self.lives}", True, (230, 230, 230))
         level_surf = font.render(f"Level: {self.level}", True, (230, 230, 230))
         hs_surf = font.render(f"High: {self.highscore}", True, (230, 230, 230))
+        help_surf = pygame.font.SysFont(None, 22).render("F1 = Napoveda", True, (150, 150, 150))
         self.screen.blit(score_surf, (10, 10))
         self.screen.blit(level_surf, (10, 36))
         self.screen.blit(hs_surf, (self.width // 2 - hs_surf.get_width() // 2, 10))
         self.screen.blit(lives_surf, (self.width - lives_surf.get_width() - 10, 10))
+        self.screen.blit(help_surf, (10, self.height - 30))
 
-        if self.paused:
+        if self.show_help:
+            # Draw help screen
+            overlay = pygame.Surface((self.width, self.height))
+            overlay.set_alpha(200)
+            overlay.fill((0, 0, 0))
+            self.screen.blit(overlay, (0, 0))
+            
+            title_font = pygame.font.SysFont(None, 48, bold=True)
+            text_font = pygame.font.SysFont(None, 28)
+            
+            title = title_font.render("NAPOVEDA", True, (255, 255, 100))
+            self.screen.blit(title, (self.width // 2 - title.get_width() // 2, 40))
+            
+            help_lines = [
+                "OVLADANI:",
+                "<-  ->  Posun padla doleva a doprava",
+                "MEZERNIK  Vystreli micek",
+                "P  Pauza/Obnoveni",
+                "R  Restart hry",
+                "F1  Napoveda (tato obrazovka)",
+                "",
+                "CIL HRY:",
+                "Rozbit vsechny cihly pomoci micku.",
+                "Nekdy spadne bonus (zluty nebo zeleny).",
+                "Zluty = sirsi padlo na 20 sekund",
+                "Zeleny = extra zivot",
+                "",
+                "Stiskni F1 nebo ESC pro zavreni"
+            ]
+            
+            y = 120
+            for line in help_lines:
+                if line == "":
+                    y += 15
+                    continue
+                if line in ["OVLADANI:", "CIL HRY:"]:
+                    surf = pygame.font.SysFont(None, 32, bold=True).render(line, True, (255, 200, 100))
+                else:
+                    surf = text_font.render(line, True, (230, 230, 230))
+                self.screen.blit(surf, (60, y))
+                y += 28
+        elif self.paused:
             large = pygame.font.SysFont(None, 64)
             if len(self.bricks) == 0:
                 text = "You Win! Press R to play again"
